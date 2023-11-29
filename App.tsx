@@ -1,105 +1,124 @@
-/*
- * @format
- */
-
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
-  ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
+  Pressable,
   View,
+  TextInput,
+  ScrollView
 } from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+import Registro from './Components/Registro'
 
 function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
+  const [modalVisible, setModalVisible] = useState(false)
+  const [nombUsu,setNombUsu] = useState('')
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="GlucoLife">
-            Edit <Text style={styles.highlight}></Text> App dedicada a la gestión de la diabetes
-          </Section>
-          <LearnMoreLinks />
+    <SafeAreaView style={styles.contenedor}>
+      <ScrollView>
+        <Text style={styles.titulo}>GlucoLife</Text>
+        <View style={styles.campo}>
+                  <Text style={styles.label}>Nombre</Text>
+                  <TextInput 
+                      style={styles.input}
+                      placeholder='Nombre del usuario'
+                      placeholderTextColor={"#666"}
+                      value={nombUsu}
+                      onChangeText={setNombUsu}
+                  />
         </View>
+        
+        <View style={styles.campo}>
+                  <Text style={styles.label}>Contraseña</Text>
+                  <TextInput 
+                      style={styles.input}
+                      placeholder='Contraseña'
+                      placeholderTextColor={"#666"}
+                      value={nombUsu}
+                      onChangeText={setNombUsu}
+                  />
+        </View>
+        <Pressable style={styles.btnIniciar}>
+          <Text style={styles.btnIniciarText}>Iniciar</Text>
+        </Pressable>
+
+        <Registro
+          modalVisible={modalVisible}
+          setModalVisible={setModalVisible}
+        />
+        
+        <View style={{marginTop:100}}>
+          <Text style={{
+                        textAlign:'center', 
+                        color:'#FFF', 
+                        fontWeight: '600', 
+                        marginBottom:20
+                      }}
+            >¿No tienes usuario aún?</Text>
+        </View>
+
+        <Pressable style={styles.btnRegistrar} onPress={() => setModalVisible(!modalVisible)}>
+          <Text style={styles.btnIniciarText}>REGISTRARSE</Text>
+        </Pressable>
+        
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaView> 
+
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  contenedor: {
+    backgroundColor:'#000080',
+    flex: 1
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  titulo: {
+    textAlign: 'center',
+    fontSize: 30,
+    color: '#00FF00',
+    fontWeight: '900',
+    marginTop:100
   },
-  sectionDescription: {
-    marginTop: 8,
+
+  btnIniciar: {
+    backgroundColor: '#00FF00',
+    padding: 15,
+    marginTop: 100,
+    marginHorizontal: 30,
+    borderRadius: 10
+  },
+
+  btnRegistrar: {
+    backgroundColor: '#00FF00',
+    padding: 15,
+    marginBottom:90,
+    marginHorizontal: 30,
+    borderRadius: 10
+  },
+
+  btnIniciarText: {
+    textAlign: 'center',
+    color: '#FFF',
     fontSize: 18,
-    fontWeight: '400',
+    fontWeight: '900',
+    textTransform: 'uppercase'
   },
-  highlight: {
-    fontWeight: '700',
+  campo:{
+    marginTop:20,
+    marginHorizontal:30
   },
+  label:{
+    color:'#FFF',
+    marginBottom:10,
+    marginTop:15,
+    fontSize:20,
+    fontWeight:'600'
+  },
+  input:{
+      backgroundColor:'#FFF',
+      padding:15,
+      borderRadius:10,
+  }
 });
 
 export default App;
