@@ -7,9 +7,9 @@ const Registro = ({modalVisible,setModalVisible}) => {
     const [repeatpass,setRepeatpass] = useState('')
     const [email,setEmail] = useState('')
   return (
-    <Modal animationType='slide' visible={modalVisible}>
-    <SafeAreaView style={styles.contenido}>
-        <ScrollView>
+    //<Modal animationType='slide' visible={modalVisible}>
+    //<SafeAreaView style={styles.contenido}>
+        <ScrollView style={styles.contenido}>
             
             <Text style={styles.titulo}>Registrar{' '}
                 <Text style={styles.tituloBold}>Usuario</Text>
@@ -66,8 +66,8 @@ const Registro = ({modalVisible,setModalVisible}) => {
             </Pressable>
 
         </ScrollView>
-    </SafeAreaView>
-    </Modal>
+    //</SafeAreaView>
+    //</Modal>
   )
 }
 
