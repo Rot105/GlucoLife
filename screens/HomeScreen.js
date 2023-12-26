@@ -10,13 +10,36 @@ const HomeScreen = () => {
                 style={{
                     fontSize: 30,
                     textAlign: "center",
-                    marginTop: "20%"
+                    marginTop: "10%",
+                    color:"#FFF"
                 }}
-            >GlucoLife</Text>
+            >Gluco<Text style={styles.tituloBold}>Life</Text>
+            </Text>
+            
         </View>
 
-        <Pressable style={styles.btnRegistrar} onPress={() => setModalVisible(true)}>
-            <Text style={styles.btnRegistrarText}>Nuevo registro</Text>
+        <View>
+            <Text
+                style={{
+                    fontSize: 30,
+                    textAlign: "center",
+                    marginTop: "33%",
+                    color:"#FFF",
+                    fontWeight:'900',
+                    fontSize:70
+                }}>120
+            </Text>
+            <Text
+                style={{
+                    textAlign:"center",
+                    color:"#fff",
+                }}
+            >Última prueba de glucosa</Text>
+            <Text style={{textAlign:'center',color:'#FFF'}} >20/12/2023 - 17:15</Text>
+        </View>
+
+        <Pressable style={styles.btnHistorial}>
+            <Text style={styles.btnHistorialText}>Historial Glucosa</Text>
         </Pressable>
         </ScrollView>
     );
@@ -27,22 +50,26 @@ const styles = StyleSheet.create({
         backgroundColor:'#000080',
         flex:1,
     },
-    btnRegistrar: {
+    btnHistorial: {
         marginTop: '50',
-        backgroundColor: '#00FF00',
+        backgroundColor: '#e32f45',
         padding: 15,
         paddingVertical:15,
-        marginTop: 100,
+        marginTop: 160,
         marginBottom:100,
         marginHorizontal: 30,
-        borderRadius: 10
+        borderRadius: 30
     },
-    btnRegistrarText: {
+    btnHistorialText: {
         textAlign: 'center',
         color: '#FFF',
         fontSize: 18,
         fontWeight: '900',
         textTransform: 'uppercase'
+    },
+    tituloBold:{
+        fontWeight:'900',
+        color:'#ff0000'
     },
 });
 
