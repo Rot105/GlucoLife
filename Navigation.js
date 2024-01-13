@@ -32,7 +32,7 @@ const CustomBarTabButton = ({children, onPress, setModalVisible}) => (
             {children}
         </View>
     </TouchableOpacity>
-)
+)  
 
 function MyTabs(){
     const RegistroCom = () => <RegistroComponents modalVisible={modalVisible} setModalVisible={setModalVisible} />;

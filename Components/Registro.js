@@ -1,17 +1,20 @@
-import React, { useState } from 'react'
-import{ FlatList,Button,Modal, Text, StyleSheet, SafeAreaView, TextInput, View, ScrollView, Pressable} from 'react-native'
+import React, { useEffect, useState,useRef  } from 'react'
+import{ Alert,Animated ,Button,Modal, Text, StyleSheet, SafeAreaView, TextInput, View, ScrollView, Pressable} from 'react-native'
 import DatePicker from 'react-native-date-picker'
+import { useNavigation } from '@react-navigation/native'
+import SQLite from 'react-native-sqlite-storage';
+import SwipeableFlatList from 'rn-gesture-swipeable-flatlist';
 
 const Registro = ({ modalVisible,setModalVisible }) => {
-    const [glucosa,setGlucosa] = useState('')
+    const [valor,setGlucosa] = useState('')
     const [fecha,setFecha] = useState(new Date())
     const [hora,setHora] = useState(new Date())
     const [comentario,setComentario] = useState('')
     const[dosis,setDosis] = useState('')
     const [btnFecha, setBtnFecha] = useState(false)
     const [btnHora, setBtnHora] = useState(false)
-
     const fechaMaxima = new Date()
+
     const buttonText = fecha ? new Intl.DateTimeFormat('es-ES', {
       day: '2-digit',
       month: '2-digit',
@@ -22,53 +25,198 @@ const Registro = ({ modalVisible,setModalVisible }) => {
     ? hora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
     : 'Elegir hora';
 
-    const [data, setData] = useState([
-        {
-          id: '1',
-          glucosa: '120',
-          fecha: '20/12/2023',
-          hora: '17:15',
-          comentario: 'Después de la comida',
-          dosis: '5',
-        },
-        {
-          id: '2',
-          glucosa: '110',
-          fecha: '19/12/2023',
-          hora: '08:30',
-          comentario: 'Antes del desayuno',
-          dosis: '7',
-        },
-        {
-            id: '3',
-            glucosa: '90',
-            fecha: '15/12/2023',
-            hora: '10:30',
-            comentario: 'Después del desayuno',
-            dosis: '7',
-          },
-          {
-            id: '4',
-            glucosa: '100',
-            fecha: '10/12/2023',
-            hora: '22:30',
-            comentario: 'Antes de dormir',
-            dosis: '7',
-          },
-      ]);
+    const navigation = useNavigation();
+
+    const onPressInicio = () => {
+        navigation.navigate('Inicio');
+        setModalVisible(!modalVisible)
+    };
+
+    const [data, setData] = useState('')
+      useEffect(() => {
+        const db = SQLite.openDatabase({ name: 'glucosaDB.db', location: 'default' });
+        db.transaction((tx) => {
+            tx.executeSql(
+              'CREATE TABLE IF NOT EXISTS glucosa (id INTEGER PRIMARY KEY AUTOINCREMENT, valor TEXT, fecha TEXT, hora TEXT, comentario TEXT, dosis TEXT)'
+            );
+          });
+        obtenerRegistros()
+      }, [])
+
+      const obtenerRegistros = () => {
+        const db = SQLite.openDatabase({ name: 'glucosaDB.db', location: 'default' });
     
+        db.transaction((tx) => {
+          tx.executeSql(
+            'SELECT * FROM glucosa',
+            [],
+            (tx, results) => {
+              const len = results.rows.length;
+              const registros = [];
+              for (let i = 0; i < len; i++) {
+                const row = results.rows.item(i);
+                registros.push(row);
+              }
+              setData(registros);
+            }
+          );
+        });
+      };
+      
+      const guardarRegistro = () => {
+        const db = SQLite.openDatabase({ name: 'glucosaDB.db', location: 'default' });
+          db.transaction((tx) => {
+            tx.executeSql(
+              'INSERT INTO glucosa (valor, fecha, hora, comentario, dosis) VALUES (?, ?, ?, ?, ?)',
+              [valor, Intl.DateTimeFormat('es-ES', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                }).format(fecha), hora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }), comentario, dosis],
+              (tx, results) => {
+                if (results.rowsAffected > 0) {
+                  console.log('Registro insertado con éxito');
+                  // Actualizar la lista de registros después de insertar
+                  obtenerRegistros();
+                  // Cerrar el modal después de insertar el registro
+                  setModalVisible(false)
+                } else {
+                  console.log('Error al insertar el registro');
+                }
+              }
+            );
+          });
+      };
+
+       // Función para eliminar un registro por ID
+  const eliminarRegistro = (id) => {
+    const db = SQLite.openDatabase({ name: 'glucosaDB.db', location: 'default' });
+    db.transaction((tx) => {
+      tx.executeSql(
+        'DELETE FROM glucosa WHERE id = ?',
+        [id],
+        (tx, results) => {
+          if (results.rowsAffected > 0) {
+            console.log('Registro eliminado con éxito');
+            // Actualizar la lista después de eliminar
+            obtenerRegistros();
+          } else {
+            console.log('Error al eliminar el registro');
+            console.log('DELETE FROM glucosa WHERE id = ?', id);
+            Alert.alert('Error', 'No se pudo eliminar el registro.');
+          }
+        }
+      );
+    });
+  };
+
+  const actualizarRegistro = () => {
+    const db = SQLite.openDatabase({ name: 'glucosaDB.db', location: 'default' });
+    
+    db.transaction((tx) => {
+      tx.executeSql(
+        'UPDATE glucosa SET valor = ?, fecha = ?,hora = ?, comentario = ?, dosis = ? WHERE id = ?',
+        [valor, Intl.DateTimeFormat('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        }).format(fecha),  hora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }), comentario, dosis],
+        (tx,results) => {
+          if (results.rowsAffected > 0) {
+            console.log('Registro actualizado con éxito');
+            obtenerRegistros();
+            setModalVisible(false);
+            toggleModificado();
+          } else {
+            console.log('Error al actualizar el registro');
+          }
+        }
+      );
+    })
+  }
+ 
       const renderItem = ({ item }) => (
         <View style={styles.row}>
-          <Text style={styles.cell}>{item.glucosa}</Text>
+          <Text style={styles.cell}>       {item.valor}</Text>
           <Text style={styles.cell}>{item.fecha}</Text>
           <Text style={styles.cell}>   {item.hora}</Text>
           <Text style={styles.cell}>{item.comentario}</Text>
           <Text style={[styles.cell]}>                 {item.dosis}</Text>
         </View>
       );
+      
+      const renderLeftActions = (item) => {
+        const trans = new Animated.Value(0);
+        return (
+          <Pressable
+            onPress={() => {console.log('modificar')}}
+            style={styles.leftAction}
+          >
+            <Animated.Text
+              style={[
+                styles.actionText,
+                {
+                  transform: [
+                    {
+                      translateX: trans.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [-100, 0],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              Modificar
+            </Animated.Text>
+          </Pressable>
+        );
+      };
+      
+      const trans = new Animated.Value(0);
+      const renderRightActions = (item) => {
+        return (
+          <Pressable
+            onPress={() => {
+              // Muestra un cuadro de diálogo de confirmación antes de eliminar
+              Alert.alert(
+                'Eliminar Registro',
+                '¿Estás seguro de que deseas eliminar este registro?',
+                [
+                  { text: 'Cancelar', style: 'cancel' },
+                  {
+                    text: 'Eliminar',
+                    onPress: () => {
+                      eliminarRegistro(item.id);
+                    },
+                    style: 'destructive',
+                  },
+                ]
+              );
+            }}
+            style={styles.rightAction}
+          >
+            <Animated.Text
+          style={[
+            styles.actionText,
+            {
+              transform: [{ translateX: trans.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 100],
+              }) }],
+            },
+          ]}
+        >
+          Eliminar
+        </Animated.Text>
+          </Pressable>
+        );
+      };
+      
 
   return (
-    <SafeAreaView style={styles.contenido}>
+    <SafeAreaView style={{backgroundColor:'#000080',
+    flex:0.88,}}>
         <View style={styles.header}>
             <Text style={styles.heading}>Glucosa</Text>
             <Text style={styles.heading}>Fecha</Text>
@@ -76,23 +224,23 @@ const Registro = ({ modalVisible,setModalVisible }) => {
             <Text style={styles.heading}>Comentario</Text>
             <Text style={styles.heading}>Dosis</Text>
         </View>
-
-        <View>
-            <FlatList
-                data={data}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id}
-            />
-        </View>
+        
+        <SwipeableFlatList
+        data={data}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItem}
+        renderRightActions={renderRightActions}
+        renderLeftActions={renderLeftActions}
+        style={{ zIndex: 1 }}
+      />
     <Modal animationType='slide' visible={modalVisible}>
-    <SafeAreaView style={styles.contenido}>
-        <ScrollView style={styles.contenido}>
+        <ScrollView style={styles.contenido} keyboardShouldPersistTaps="always">
             
             <Text style={styles.titulo}>Glucosa{' '}
                 <Text style={styles.tituloBold}>Diaria</Text>
             </Text>
 
-            <Pressable style={styles.btnCancelar} onPress={() => setModalVisible(!modalVisible)}>
+            <Pressable style={styles.btnCancelar} onPress={onPressInicio}>
                 <Text style={styles.btnCancelarText}>Cancelar</Text>
             </Pressable>
 
@@ -103,7 +251,7 @@ const Registro = ({ modalVisible,setModalVisible }) => {
                     placeholder='Valor de glucosa'
                     placeholderTextColor={"#666"}
                     keyboardType='number-pad'
-                    value={glucosa}
+                    value={valor}
                     onChangeText={setGlucosa}
                     maxLength={3}
                 />
@@ -183,12 +331,11 @@ const Registro = ({ modalVisible,setModalVisible }) => {
                 />
             </View>
 
-            <Pressable style={styles.btnRegistrar} onPress={() => setModalVisible(false)}>
-                <Text style={styles.btnRegistrarText}>Registrar</Text>
+            <Pressable style={styles.btnRegistrar} onPress={() => guardarRegistro()}>
+                <Text style={styles.btnRegistrarText}>REGISTRAR</Text>
             </Pressable>
 
         </ScrollView>
-    </SafeAreaView>
     </Modal>
     </SafeAreaView>
   )
@@ -198,7 +345,6 @@ const styles = StyleSheet.create({
     contenido:{
         backgroundColor:'#000080',
         flex:1,
-
     },
     titulo:{
         fontSize: 30,
@@ -296,6 +442,25 @@ const styles = StyleSheet.create({
         flex: 1,
         color:'black',
         fontWeight:'bold'
+    },
+    leftAction: {
+      backgroundColor: '#32a852',
+      justifyContent: 'center',
+      flex: 1,
+      alignItems: 'flex-end',
+      paddingRight: 20,
+    },
+    rightAction: {
+      backgroundColor: '#ff4444',
+      justifyContent: 'center',
+      flex: 1,
+      alignItems: 'flex-start',
+      paddingLeft: 20,
+    },
+    actionText: {
+      color: '#fff',
+      fontWeight: '600',
+      padding: 10,
     }
 })
 

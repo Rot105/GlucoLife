@@ -1,7 +1,46 @@
-import React from 'react';
+import React,{ useEffect, useState,useCallback  } from 'react';
 import { View, Text,StyleSheet, TouchableOpacity,Pressable,ScrollView } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import SQLite from 'react-native-sqlite-storage';
 
 const HomeScreen = () => {
+    const navigation = useNavigation();
+    const [ultimoRegistro, setUltimoRegistro] = useState(null);
+    const actualizarUltimoRegistro = (nuevoRegistro) => {
+        setUltimoRegistro(nuevoRegistro);
+      };
+
+    useEffect(() => {
+        obtenerUltimoRegistro();
+    }, []);
+
+  const obtenerUltimoRegistro = () => {
+    const db = SQLite.openDatabase({ name: 'glucosaDB.db', location: 'default' });
+
+    db.transaction((tx) => {
+      tx.executeSql(
+        'SELECT * FROM glucosa ORDER BY id DESC LIMIT 1',
+        [],
+        (tx, results) => {
+          const len = results.rows.length;
+          if (len > 0) {
+            const ultimoRegistro = results.rows.item(0);
+            setUltimoRegistro(ultimoRegistro);
+          }
+        }
+      );
+    });
+  };
+  useFocusEffect(
+    useCallback(() => {
+      obtenerUltimoRegistro();
+    }, [])
+  );
+
+  const onPressHistorial = () => {
+    navigation.navigate('Registro');
+    
+  };
 
     return (
         <ScrollView style={styles.contenido}>
@@ -19,26 +58,31 @@ const HomeScreen = () => {
         </View>
 
         <View>
+        {ultimoRegistro && (
+          <>
             <Text
-                style={{
-                    fontSize: 30,
-                    textAlign: "center",
-                    marginTop: "33%",
-                    color:"#FFF",
-                    fontWeight:'900',
-                    fontSize:70
-                }}>120
+              style={{
+                fontSize: 30,
+                textAlign: 'center',
+                marginTop: '33%',
+                color: '#FFF',
+                fontWeight: '900',
+                fontSize: 70,
+              }}
+            >
+              {ultimoRegistro.valor}
             </Text>
-            <Text
-                style={{
-                    textAlign:"center",
-                    color:"#fff",
-                }}
-            >Última prueba de glucosa</Text>
-            <Text style={{textAlign:'center',color:'#FFF'}} >20/12/2023 - 17:15</Text>
-        </View>
+            <Text style={{ textAlign: 'center', color: '#fff' }}>
+              Última prueba de glucosa
+            </Text>
+            <Text style={{ textAlign: 'center', color: '#FFF' }}>
+              {ultimoRegistro.fecha} - {ultimoRegistro.hora}
+            </Text>
+          </>
+        )}
+      </View>
 
-        <Pressable style={styles.btnHistorial}>
+        <Pressable style={styles.btnHistorial} onPress={onPressHistorial}>
             <Text style={styles.btnHistorialText}>Historial Glucosa</Text>
         </Pressable>
         </ScrollView>
